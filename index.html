@@ -8,8 +8,39 @@
   <body>
     <h2>Test Salesforce handoff</h2>
     <!-- <script src="https://autopilot.kodif.io/chat/v1/application/6cb887f1-7847-445e-9154-eb3971e8c8c1/widget-script"></script> -->
-    <script type="text/javascript">
-      var initESW = function (gslbBaseURL) {
+
+    <script>
+      function loadScriptsSafely() {
+        const originalBody = document.body.innerHTML;
+
+        function handleScriptError(scriptName, error) {
+          console.error(`Error loading ${scriptName}:`, error);
+          kodifChatWidgetScript.remove();
+        }
+
+        // Load Kodif widget
+        const kodifChatWidgetScript = document.createElement("script");
+        kodifChatWidgetScript.src =
+          "https://chatwidget.kodif.io/widgets.js?appId=6cb887f1-7847-445e-9154-eb3971e8c8c1&appPosition=left&hideHeader=false&hideFooter=false&demoPage=false&playground=false&open=false";
+        kodifChatWidgetScript.onerror = (error) =>
+          handleScriptError("Kodif Chat Widget", error);
+
+        // salesforce style tag
+        const styleTag = document.createElement("style");
+        styleTag.type = "text/css";
+        styleTag.textContent = `.embeddedServiceHelpButton .helpButton .uiButton {
+		background-color: #005290;
+		font-family: "Arial", sans-serif;
+	}
+	.embeddedServiceHelpButton .helpButton .uiButton:focus {
+		outline: 1px solid #005290;
+	}`;
+        document.head.appendChild(styleTag);
+
+        // salesforce script tag
+        const scriptTag = document.createElement("script");
+        scriptTag.type = "text/javascript";
+        scriptTag.textContent = ` var initESW = function (gslbBaseURL) {
         embedded_svc.settings.displayHelpButton = true; //Or false
         embedded_svc.settings.language = ""; //For example, enter 'en' or 'en-US'
         //embedded_svc.settings.defaultMinimizedText = 'ASK SIMON'; //(Defaults to Chat with an Expert)
@@ -56,7 +87,17 @@
         document.body.appendChild(s);
       } else {
         initESW("https://service.force.com");
+      }`;
+        scriptTag.onerror = (error) =>
+          handleScriptError("Salesforce Chat Widget", error);
+
+        // Load scripts sequentially
+        document.body.appendChild(kodifChatWidgetScript);
+        kodifChatWidgetScript.onload = () => {
+          document.body.appendChild(scriptTag);
+        };
       }
+      loadScriptsSafely();
     </script>
   </body>
 </html>
